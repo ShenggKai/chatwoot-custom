@@ -13,6 +13,7 @@ export const login = async ({
 }) => {
   try {
     const response = await wootAPI.post('auth/sign_in', credentials);
+
     setAuthCredentials(response);
     clearLocalStorageOnLogout();
     window.location = getLoginRedirectURL({
@@ -72,3 +73,45 @@ export const setNewPassword = async ({
 
 export const resetPassword = async ({ email }) =>
   wootAPI.post('auth/password', { email });
+
+
+// LDAP authentication
+export async function ldapLogin({ username, password, ssoAccountId, ssoConversationId }) {
+  try {
+    const res = await fetch('/api/v1/ldap_login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+
+    // Tạo object response giả lập giống axios để dùng lại setAuthCredentials
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'LDAP login failed');
+
+    // Tạo response object giống axios để dùng lại setAuthCredentials
+    const headers = {
+      'access-token': res.headers.get('access-token'),
+      client: res.headers.get('client'),
+      uid: res.headers.get('uid'),
+      expiry: res.headers.get('expiry'),
+      'token-type': res.headers.get('token-type'),
+    };
+
+    const fakeResponse = {
+      data: data,
+      headers: headers,
+    };
+
+    setAuthCredentials(fakeResponse);
+    clearLocalStorageOnLogout();
+    window.location = getLoginRedirectURL({
+      ssoAccountId,
+      ssoConversationId,
+      user: data.data, // Đảm bảo backend trả về user trong data.data
+    });
+    return data;
+  } catch (error) {
+    throwErrorMessage(error);
+    throw error;
+  }
+}

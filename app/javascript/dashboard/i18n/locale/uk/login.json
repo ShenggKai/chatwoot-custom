@@ -3,7 +3,7 @@
     "TITLE": "Увійти до Chatwoot",
     "EMAIL": {
       "LABEL": "Email",
-      "PLACEHOLDER": "example{'@'}companyname.com",
+      "PLACEHOLDER": "example{'@'}mobifone.vn",
       "ERROR": "Будь ласка, введіть коректну адресу електронної пошти"
     },
     "PASSWORD": {

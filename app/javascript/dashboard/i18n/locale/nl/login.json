@@ -3,7 +3,7 @@
     "TITLE": "Inloggen bij Chatwoot",
     "EMAIL": {
       "LABEL": "E-mailadres",
-      "PLACEHOLDER": "example{'@'}companyname.com",
+      "PLACEHOLDER": "example{'@'}mobifone.vn",
       "ERROR": "Voer een geldig e-mailadres in"
     },
     "PASSWORD": {

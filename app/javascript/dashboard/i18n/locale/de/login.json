@@ -3,7 +3,7 @@
     "TITLE": "Melden Sie sich bei Chatwoot an",
     "EMAIL": {
       "LABEL": "E-Mail",
-      "PLACEHOLDER": "example{'@'}companyname.com",
+      "PLACEHOLDER": "example{'@'}mobifone.vn",
       "ERROR": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
     },
     "PASSWORD": {

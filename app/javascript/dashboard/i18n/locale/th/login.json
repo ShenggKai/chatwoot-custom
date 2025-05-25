@@ -1,9 +1,9 @@
 {
   "LOGIN": {
-    "TITLE": "Login to Chatwoot",
+    "TITLE": "Login to MobiFone Chatwoot",
     "EMAIL": {
       "LABEL": "อีเมล์",
-      "PLACEHOLDER": "example{'@'}companyname.com",
+      "PLACEHOLDER": "example{'@'}mobifone.vn",
       "ERROR": "กรุณากรอกที่อยู่อีเมล์ให้ถูกต้อง"
     },
     "PASSWORD": {

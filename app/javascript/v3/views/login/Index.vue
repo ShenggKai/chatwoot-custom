@@ -1,6 +1,6 @@
 <script>
 // utils and composables
-import { login } from '../../api/auth';
+import { login, ldapLogin } from '../../api/auth';
 import { mapGetters } from 'vuex';
 import { parseBoolean } from '@chatwoot/utils';
 import { useAlert } from 'dashboard/composables';
@@ -43,8 +43,13 @@ export default {
     return {
       // We need to initialize the component with any
       // properties that will be used in it
-      credentials: {
+      activeTab: 'ldap',
+      credentialsStandard: {
         email: '',
+        password: '',
+      },
+      credentialsLdap: {
+        username: '',
         password: '',
       },
       loginApi: {
@@ -57,14 +62,13 @@ export default {
   },
   validations() {
     return {
-      credentials: {
-        password: {
-          required,
-        },
-        email: {
-          required,
-          email,
-        },
+      credentialsStandard: {
+        email: { required, email },
+        password: { required },
+      },
+      credentialsLdap: {
+        username: { required },
+        password: { required },
       },
     };
   },
@@ -119,8 +123,8 @@ export default {
       const credentials = {
         email: this.email
           ? decodeURIComponent(this.email)
-          : this.credentials.email,
-        password: this.credentials.password,
+          : this.credentialsStandard.email,
+        password: this.credentialsStandard.password,
         sso_auth_token: this.ssoAuthToken,
         ssoAccountId: this.ssoAccountId,
         ssoConversationId: this.ssoConversationId,
@@ -141,8 +145,35 @@ export default {
           );
         });
     },
-    submitFormLogin() {
-      if (this.v$.credentials.email.$invalid && !this.email) {
+    async submitFormLogin() {
+      if (this.activeTab === 'ldap') {
+        if (!this.credentialsLdap.username || !this.credentialsLdap.password) {
+            this.showAlertMessage('Please enter your username and password');
+          return;
+        }
+        this.loginApi.showLoading = true;
+        try {
+          const res = await ldapLogin({
+            username: this.credentialsLdap.username,
+            password: this.credentialsLdap.password,
+            ssoAccountId: this.ssoAccountId,
+            ssoConversationId: this.ssoConversationId,
+          });
+
+          if (res.data) {
+            this.showAlertMessage(this.$t('LOGIN.API.SUCCESS_MESSAGE'));
+          } else {
+            this.showAlertMessage(res.error || this.$t('LOGIN.API.UNAUTH'));
+          }
+        } catch (e) {
+          this.showAlertMessage(e?.message || this.$t('LOGIN.API.UNAUTH'));
+        } finally {
+          this.loginApi.showLoading = false;
+        }
+        return;
+      }
+
+      if (this.v$.credentialsStandard.email.$invalid && !this.email) {
         this.showAlertMessage(this.$t('LOGIN.EMAIL.ERROR'));
         return;
       }
@@ -159,13 +190,13 @@ export default {
   >
     <section class="max-w-5xl mx-auto">
       <img
-        :src="globalConfig.logo"
+        src="https://gitlab.com/product.mbf2/public-resources/-/raw/main/images/mobifone_logo.svg"
         :alt="globalConfig.installationName"
         class="block w-auto h-8 mx-auto dark:hidden"
       />
       <img
         v-if="globalConfig.logoDark"
-        :src="globalConfig.logoDark"
+        src="https://gitlab.com/product.mbf2/public-resources/-/raw/main/images/mobifone_logo.svg"
         :alt="globalConfig.installationName"
         class="hidden w-auto h-8 mx-auto dark:block"
       />
@@ -182,60 +213,120 @@ export default {
       </p>
     </section>
     <section
-      class="bg-white shadow sm:mx-auto mt-11 sm:w-full sm:max-w-lg dark:bg-n-solid-2 p-11 sm:shadow-lg sm:rounded-lg"
-      :class="{
-        'mb-8 mt-15': !showGoogleOAuth,
-        'animate-wiggle': loginApi.hasErrored,
-      }"
+  class="bg-white shadow sm:mx-auto mt-11 sm:w-full sm:max-w-lg dark:bg-n-solid-2 p-11 sm:shadow-lg sm:rounded-lg"
+  :class="{
+    'mb-8 mt-15': !showGoogleOAuth,
+    'animate-wiggle': loginApi.hasErrored,
+  }"
+>
+  <div class="flex mb-6 border-b border-gray-200">
+    <button
+      class="w-1/2 px-4 py-2 font-medium focus:outline-none text-center"
+      :class="activeTab === 'ldap' ? 'border-b-2 border-n-brand text-n-brand' : 'text-gray-500'"
+      @click="activeTab = 'ldap'"
+      type="button"
     >
-      <div v-if="!email">
-        <GoogleOAuthButton v-if="showGoogleOAuth" />
-        <form class="space-y-5" @submit.prevent="submitFormLogin">
-          <FormInput
-            v-model="credentials.email"
-            name="email_address"
-            type="text"
-            data-testid="email_input"
-            :tabindex="1"
-            required
-            :label="$t('LOGIN.EMAIL.LABEL')"
-            :placeholder="$t('LOGIN.EMAIL.PLACEHOLDER')"
-            :has-error="v$.credentials.email.$error"
-            @input="v$.credentials.email.$touch"
-          />
-          <FormInput
-            v-model="credentials.password"
-            type="password"
-            name="password"
-            data-testid="password_input"
-            required
-            :tabindex="2"
-            :label="$t('LOGIN.PASSWORD.LABEL')"
-            :placeholder="$t('LOGIN.PASSWORD.PLACEHOLDER')"
-            :has-error="v$.credentials.password.$error"
-            @input="v$.credentials.password.$touch"
+      LDAP
+    </button>
+    <button
+      class="w-1/2 px-4 py-2 font-medium focus:outline-none text-center"
+      :class="activeTab === 'standard' ? 'border-b-2 border-n-brand text-n-brand' : 'text-gray-500'"
+      @click="activeTab = 'standard'"
+      type="button"
+    >
+      Standard
+    </button>
+  </div>
+  <div v-if="!email">
+    <GoogleOAuthButton v-if="showGoogleOAuth && activeTab === 'standard'" />
+    <form
+      v-if="activeTab === 'standard'"
+      class="space-y-5"
+      @submit.prevent="submitFormLogin"
+    >
+      <!-- Standard login form -->
+      <FormInput
+        v-model="credentialsStandard.email"
+        name="email_address"
+        type="text"
+        data-testid="email_input"
+        :tabindex="1"
+        required
+        :label="$t('LOGIN.EMAIL.LABEL')"
+        :placeholder="$t('LOGIN.EMAIL.PLACEHOLDER')"
+        :has-error="v$.credentialsStandard.email.$error"
+        @input="v$.credentialsStandard.email.$touch"
+      />
+      <FormInput
+        v-model="credentialsStandard.password"
+        type="password"
+        name="password"
+        data-testid="password_input"
+        required
+        :tabindex="2"
+        :label="$t('LOGIN.PASSWORD.LABEL')"
+        :placeholder="$t('LOGIN.PASSWORD.PLACEHOLDER')"
+        :has-error="v$.credentialsStandard.password.$error"
+        @input="v$.credentialsStandard.password.$touch"
+      >
+        <p v-if="!globalConfig.disableUserProfileUpdate">
+          <router-link
+            to="auth/reset/password"
+            class="text-sm text-link"
+            tabindex="4"
           >
-            <p v-if="!globalConfig.disableUserProfileUpdate">
-              <router-link
-                to="auth/reset/password"
-                class="text-sm text-link"
-                tabindex="4"
-              >
-                {{ $t('LOGIN.FORGOT_PASSWORD') }}
-              </router-link>
-            </p>
-          </FormInput>
-          <SubmitButton
-            :disabled="loginApi.showLoading"
-            :tabindex="3"
-            :button-text="$t('LOGIN.SUBMIT')"
-            :loading="loginApi.showLoading"
-          />
-        </form>
-      </div>
-      <div v-else class="flex items-center justify-center">
-        <Spinner color-scheme="primary" size="" />
-      </div>
-    </section>
+            {{ $t('LOGIN.FORGOT_PASSWORD') }}
+          </router-link>
+        </p>
+      </FormInput>
+      <SubmitButton
+        :disabled="loginApi.showLoading"
+        :tabindex="3"
+        :button-text="$t('LOGIN.SUBMIT')"
+        :loading="loginApi.showLoading"
+      />
+    </form>
+    <form
+      v-else-if="activeTab === 'ldap'"
+      class="space-y-5"
+      @submit.prevent="submitFormLogin"
+    >
+      <!-- LDAP login form -->
+      <FormInput
+        v-model="credentialsLdap.username"
+        name="ldap_username"
+        type="text"
+        data-testid="ldap_username_input"
+        :tabindex="1"
+        required
+        label="Username"
+        placeholder="LDAP username"
+        :has-error="v$.credentialsLdap.username.$error"
+        @input="v$.credentialsLdap.username.$touch"
+      />
+      <FormInput
+        v-model="credentialsLdap.password"
+        type="password"
+        name="ldap_password"
+        data-testid="ldap_password_input"
+        required
+        :tabindex="2"
+        label="Password"
+        placeholder="Password"
+        :has-error="v$.credentialsLdap.password.$error"
+        @input="v$.credentialsLdap.password.$touch"
+      />
+      <SubmitButton
+        :disabled="loginApi.showLoading"
+        :tabindex="3"
+        button-text="Login with LDAP"
+        :loading="loginApi.showLoading"
+      />
+    </form>
+  </div>
+  <div v-else class="flex items-center justify-center">
+    <Spinner color-scheme="primary" size="" />
+  </div>
+</section>
   </main>
 </template>

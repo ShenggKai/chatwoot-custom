@@ -1,9 +1,9 @@
 {
   "LOGIN": {
-    "TITLE": "Login to Chatwoot",
+    "TITLE": "Login to MobiFone Chatwoot",
     "EMAIL": {
       "LABEL": "El. paštas",
-      "PLACEHOLDER": "example{'@'}companyname.com",
+      "PLACEHOLDER": "example{'@'}mobifone.vn",
       "ERROR": "Prašau įveskite teisingą el. pašto adresą"
     },
     "PASSWORD": {

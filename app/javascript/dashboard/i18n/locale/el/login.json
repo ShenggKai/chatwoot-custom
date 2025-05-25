@@ -3,7 +3,7 @@
     "TITLE": "Είσοδος στο Chatwoot",
     "EMAIL": {
       "LABEL": "Email",
-      "PLACEHOLDER": "example{'@'}companyname.com",
+      "PLACEHOLDER": "example{'@'}mobifone.vn",
       "ERROR": "Παρακαλώ εισάγετε μια έγκυρη διεύθυνση email"
     },
     "PASSWORD": {

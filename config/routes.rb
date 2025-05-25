@@ -35,6 +35,7 @@ Rails.application.routes.draw do
   get '/api', to: 'api#index'
   namespace :api, defaults: { format: 'json' } do
     namespace :v1 do
+      post 'ldap_login', to: 'ldap_sessions#create'
       # ----------------------------------
       # start of account scoped api routes
       resources :accounts, only: [:create, :show, :update] do
@@ -53,17 +54,11 @@ Rails.application.routes.draw do
           end
           namespace :captain do
             resources :assistants do
-              member do
-                post :playground
-              end
               resources :inboxes, only: [:index, :create, :destroy], param: :inbox_id
             end
+            resources :documents, only: [:index, :show, :create, :destroy]
             resources :assistant_responses
             resources :bulk_actions, only: [:create]
-            resources :copilot_threads, only: [:index] do
-              resources :copilot_messages, only: [:index]
-            end
-            resources :documents, only: [:index, :show, :create, :destroy]
           end
           resources :agent_bots, only: [:index, :create, :show, :update, :destroy] do
             delete :avatar, on: :member
@@ -104,7 +99,7 @@ Rails.application.routes.draw do
               post :filter
             end
             scope module: :conversations do
-              resources :messages, only: [:index, :create, :destroy, :update] do
+              resources :messages, only: [:index, :create, :destroy] do
                 member do
                   post :translate
                   post :retry
@@ -385,6 +380,13 @@ Rails.application.routes.draw do
 
       post 'webhooks/stripe', to: 'webhooks/stripe#process_payload'
       post 'webhooks/firecrawl', to: 'webhooks/firecrawl#process_payload'
+    end
+  end
+
+  # Thêm API tạo JWT token riêng biệt
+  namespace :api do
+    namespace :v1 do
+      post 'jwt_token', to: 'jwt_tokens#create'
     end
   end
 

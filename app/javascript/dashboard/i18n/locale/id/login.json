@@ -3,7 +3,7 @@
     "TITLE": "Masuk ke Chatwoot",
     "EMAIL": {
       "LABEL": "Email",
-      "PLACEHOLDER": "example{'@'}companyname.com",
+      "PLACEHOLDER": "example{'@'}mobifone.vn",
       "ERROR": "Harap masukkan alamat email yang valid"
     },
     "PASSWORD": {

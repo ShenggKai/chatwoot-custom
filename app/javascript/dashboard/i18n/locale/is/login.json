@@ -1,9 +1,9 @@
 {
   "LOGIN": {
-    "TITLE": "Login to Chatwoot",
+    "TITLE": "Login to MobiFone Chatwoot",
     "EMAIL": {
       "LABEL": "Tölvupóstfang",
-      "PLACEHOLDER": "example{'@'}companyname.com",
+      "PLACEHOLDER": "example{'@'}mobifone.vn",
       "ERROR": "Vinsamlegast skrifaðu gilt netfang"
     },
     "PASSWORD": {
